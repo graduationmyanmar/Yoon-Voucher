@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#143d29" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Yoon Copy POS" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Yoon Copy — School Bookstore POS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pyidaungsu:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f6f5;
+      --surface: #ffffff;
+      --sidebar: #143d29;
+      --sidebar-active: #a7f045;
+      --primary: #1b5e3a;
+      --primary-hover: #14482c;
+      --text: #18221d;
+      --muted: #64746c;
+      --border: #dfe6e2;
+      --danger: #c62828;
+      --font-ui: 'Inter', 'Pyidaungsu', sans-serif;
+    }
+    body.mm-font {
+      font-family: 'Pyidaungsu', 'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+    aside {
+      width: 230px;
+      background: var(--sidebar);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px 12px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .brand img {
+      width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #fff;
+    }
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: #e6efe9;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 4px;
+      font-family: inherit;
+    }
+    .nav-btn.active {
+      background: var(--sidebar-active);
+      color: #112218;
+      font-weight: 700;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .grid-pos { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      aside { width: 100%; }
+      .grid-pos { grid-template-columns: 1fr; }
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    button {
+      padding: 8px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    button.btn-danger {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+    button.btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+    button.btn-primary:hover { background: var(--primary-hover); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px; text-align: left; font-size: 13px; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: none; align-items: center; justify-content: center; z-index: 50; padding: 12px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: #fff; border-radius: 10px; width: 100%; max-width: 480px; padding: 18px; }
+    .sync-badge {
+      width: 100%;
+      text-align: left;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.22);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .lang-row { display: flex; gap: 6px; }
+    .lang-row button { flex: 1; }
+  </style>
+</head>
+<body>
+  <aside>
+    <div>
+      <div class="brand">
+        <img id="sidebarLogo" src="" alt="Logo" onerror="this.style.display='none'" />
+        <div>
+          <div id="sidebarShopName" style="font-weight:700;font-size:15px;">Yoon Copy</div>
+          <div id="sidebarEmail" style="font-size:11px;opacity:0.8;">yooncopy.18@gmail.com</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="nav-btn active" data-tab="sell" onclick="switchTab('sell')">Sell</button>
+        <button class="nav-btn" data-tab="products" onclick="switchTab('products')">Products</button>
+        <button class="nav-btn" data-tab="customers" onclick="switchTab('customers')">Customers</button>
+        <button class="nav-btn" data-tab="reports" onclick="switchTab('reports')">Reports</button>
+        <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+      </div>
+    </div>
+    <div>
+      <button id="syncStatus" class="sync-badge" onclick="syncNowManual()" title="Tap to Sync Now">Sync: Connecting...</button>
+      <div class="lang-row">
+        <button onclick="setLang('en')">English</button>
+        <button onclick="setLang('mm')">မြန်မာ</button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- SELL -->
+    <section id="tab-sell">
+      <h2 style="margin-bottom:14px;">Sell</h2>
+      <div class="grid-pos">
+        <div>
+          <div class="card">
+            <h4 style="margin-bottom:8px;">Quick Add by School & Book No.</h4>
+            <div class="grid-2">
+              <input id="quickSchool" list="schoolList" placeholder="School Name (ကျောင်းနာမည်)" />
+              <div style="display:flex;gap:8px;">
+                <input id="quickBookNo" placeholder="Book No. (စာအုပ်နံပါတ်)" onkeydown="if(event.key==='Enter')quickAddBook()" />
+                <button class="btn-primary" onclick="quickAddBook()">+ Add</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4 style="margin-bottom:8px;">Custom Item / Customer Book</h4>
+            <div class="grid-2">
+              <input id="customName" placeholder="Book / Item Name" />
+              <input id="customPrice" type="number" placeholder="Price" oninput="calcCustomAmt()" />
+              <input id="customQty" type="number" value="1" min="1" oninput="calcCustomAmt()" />
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="customAmt" type="number" readonly placeholder="Amount" />
+                <button class="btn-primary" onclick="addCustomToCart()">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="grid-2" style="margin-bottom:10px;">
+              <input id="sellSearchSchool" list="schoolList" placeholder="Search School..." oninput="renderSellCatalog()" />
+              <input id="sellSearchBook" placeholder="Search Book No. or Name..." oninput="renderSellCatalog()" />
+            </div>
+            <div id="sellCatalog" class="grid-2"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>Cart</h3>
+            <button onclick="clearCart()">Clear</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr>
+            </thead>
+            <tbody id="cartBody"></tbody>
+          </table>
+          <div style="margin-top:12px;" class="grid-2">
+            <div>
+              <label style="font-size:12px;">Discount</label>
+              <input id="cartDiscount" type="number" value="0" oninput="renderCartTotals()" />
+            </div>
+            <div>
+              <label style="font-size:12px;">Customer</label>
+              <select id="cartCustomer"></select>
+            </div>
+            <div>
+              <label style="font-size:12px;">Payment</label>
+              <select id="cartPayment"></select>
+            </div>
+            <div>
+              <label style="font-size:12px;">Paid Amount</label>
+              <input id="cartPaid" type="number" value="0" />
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;justify-content:space-between;font-weight:700;font-size:16px;">
+            <span>Total</span>
+            <span id="cartTotal">0 Ks</span>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="printReceiptPreview()">Print Receipt</button>
+            <button onclick="saveReceiptJPEG()">Save JPEG</button>
+            <button class="btn-primary" style="flex:1;" onclick="checkoutSale()">Checkout</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section id="tab-products" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <h2>Products</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="openBookModal()">+ Add Book</button>
+          <button onclick="exportSchoolCSV()">Export CSV</button>
+          <button onclick="window.print()">Print</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="grid-2" style="margin-bottom:10px;">
+          <input id="prodFilterSchool" list="schoolList" placeholder="Filter by School..." oninput="renderProducts()" />
+          <input id="prodFilterText" placeholder="Search Book No. or Name..." oninput="renderProducts()" />
+        </div>
+        <table>
+          <thead>
+            <tr><th>School</th><th>Book No.</th><th>Book Name</th><th>Price</th><th>Action</th></tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS -->
+    <section id="tab-customers" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2>Customers</h2>
+        <button class="btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
+      </div>
+      <div class="card">
+        <div class="grid-2" style="margin-bottom:10px;">
+          <input id="custFilterSchool" list="schoolList" placeholder="Filter by School..." oninput="renderCustomers()" />
+          <input id="custFilterName" placeholder="Search Customer Name..." oninput="renderCustomers()" />
+        </div>
+        <table>
+          <thead>
+            <tr><th>School</th><th>Customer Name</th><th>Phone</th><th>Note</th><th>Action</th></tr>
+          </thead>
+          <tbody id="customersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="tab-reports" style="display:none;">
+      <h2 style="margin-bottom:14px;">Reports & Sales History</h2>
+      <div class="card">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          <button onclick="setReportPeriod('today')">Today</button>
+          <button onclick="setReportPeriod('week')">This Week</button>
+          <button onclick="setReportPeriod('month')">This Month</button>
+          <button onclick="setReportPeriod('year')">This Year</button>
+          <button onclick="setReportPeriod('all')">All Time</button>
+        </div>
+        <div class="grid-2">
+          <input id="repSearchSchool" list="schoolList" placeholder="Search School..." oninput="renderReports()" />
+          <input id="repSearchCustomer" placeholder="Search Customer Name..." oninput="renderReports()" />
+        </div>
+      </div>
+      <div class="card">
+        <h3>Sales Receipts</h3>
+        <table>
+          <thead>
+            <tr><th>Receipt No.</th><th>Date</th><th>School</th><th>Customer</th><th>Total</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="reportsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" style="display:none;">
+      <h2 style="margin-bottom:14px;">Settings</h2>
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Shop & Logo</h3>
+        <div class="grid-2">
+          <div><label>Shop Name</label><input id="setShopName" /></div>
+          <div><label>Shop Gmail</label><input id="setShopGmail" /></div>
+          <div><label>Phone</label><input id="setShopPhone" /></div>
+          <div><label>Address</label><input id="setShopAddress" /></div>
+          <div>
+            <label>Upload Logo</label>
+            <input id="setLogoInput" type="file" accept="image/*" onchange="handleLogoUpload(event)" />
+          </div>
+          <div>
+            <label>Crop Scale (0.5 - 2.5)</label>
+            <input id="setLogoScale" type="range" min="0.5" max="2.5" step="0.1" value="1" oninput="renderLogoCropPreview()" />
+            <canvas id="logoCropCanvas" width="120" height="120" style="border:1px solid #ccc;margin-top:6px;border-radius:6px;"></canvas>
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:12px;" onclick="saveShopSettings()">Save Shop</button>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Receipt & Printers</h3>
+        <div class="grid-2">
+          <div>
+            <label>Shop Printer</label>
+            <select id="setPrinterSelect"></select>
+          </div>
+          <div>
+            <label>Add Custom Printer</label>
+            <div style="display:flex;gap:6px;">
+              <input id="newPrinterName" placeholder="e.g. Epson L1800" />
+              <button onclick="addCustomPrinter()">Add</button>
+            </div>
+          </div>
+          <div>
+            <label>Paper Size</label>
+            <select id="setPaperSize">
+              <option value="80mm">80mm Thermal</option>
+              <option value="58mm">58mm Thermal</option>
+              <option value="A4">A4</option>
+            </select>
+          </div>
+          <div><label>Footer Text</label><input id="setFooterText" /></div>
+        </div>
+        <button class="btn-primary" style="margin-top:12px;" onclick="saveReceiptSettings()">Save Receipt</button>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Payments & Cloud Sync</h3>
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+          <input id="newPaymentMethod" placeholder="New Payment (e.g. KBZPay, Cash)" />
+          <button class="btn-primary" onclick="addPaymentMethod()">Add Payment</button>
+        </div>
+        <div id="paymentList" style="margin-bottom:14px;"></div>
+        <div class="grid-2">
+          <div><label>Primary Owner Gmail</label><input id="setOwnerGmail" /></div>
+          <div><label>Cloudflare Worker URL</label><input id="setFbUrl" readonly /></div>
+          <div><label>Sync Room ID</label><input id="setSyncRoom" readonly /></div>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="btn-primary" onclick="saveCloudAndSecurity()">Save & Sync Now</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <datalist id="schoolList"></datalist>
+
+  <!-- ADD BOOK MODAL -->
+  <div id="bookModal" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="margin-bottom:10px;">Add School Book</h3>
+      <div style="display:grid;gap:10px;">
+        <input id="mBookSchool" list="schoolList" placeholder="School Name" />
+        <input id="mBookNo" placeholder="Book No. (e.g. 001)" />
+        <input id="mBookName" placeholder="Book Name" />
+        <input id="mBookPrice" type="number" placeholder="Price (Ks)" />
+      </div>
+      <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px;">
+        <button onclick="closeBookModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveBook()">Save Book</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD CUSTOMER MODAL -->
+  <div id="customerModal" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="margin-bottom:10px;">Add Customer</h3>
+      <div style="display:grid;gap:10px;">
+        <input id="mCustSchool" list="schoolList" placeholder="School Name" />
+        <input id="mCustName" placeholder="Customer Name" />
+        <input id="mCustPhone" placeholder="Phone" />
+        <input id="mCustNote" placeholder="Note" />
+      </div>
+      <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px;">
+        <button onclick="closeCustomerModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveCustomer()">Save Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT SALE MODAL -->
+  <div id="editSaleModal" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="margin-bottom:10px;">Edit Sale Receipt</h3>
+      <input type="hidden" id="editSaleId" />
+      <div style="display:grid;gap:10px;">
+        <label style="font-size:12px;">Customer</label>
+        <input id="editSaleCustomer" />
+        <label style="font-size:12px;">School</label>
+        <input id="editSaleSchool" />
+        <label style="font-size:12px;">Total (Ks)</label>
+        <input id="editSaleTotal" type="number" />
+      </div>
+      <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px;">
+        <button onclick="closeEditSaleModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveEditedSale()">Update Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="receiptCanvas" width="420" height="620" style="display:none;"></canvas>
+
+  <script>
+    const STORAGE_KEY = 'YOON_COPY_POS_V1';
+    // Fixed shared endpoint so PC and Mobile ALWAYS use the exact same room
+    const SHARED_ROOM_URL = 'https://yooncopypos.yoon-copy.workers.dev/room/yooncopy-pos-2026';
+    const POLL_INTERVAL_MS = 2500;
+
+    let rawLogoImage = null;
+    let cart = [];
+    let reportPeriod = 'all';
+    let workerPollTimer = null;
+    let isSyncBusy = false;
+
+    let state = {
+      updatedAt: Date.now(),
+      lang: 'en',
+      shop: {
+        name: 'Yoon Copy',
+        gmail: 'yooncopy.18@gmail.com',
+        phone: '',
+        address: '',
+        logo: ''
+      },
+      receipt: {
+        printer: 'Shop Thermal Printer',
+        printers: ['Shop Thermal Printer', 'Shop Laser Printer'],
+        paper: '80mm',
+        footer: 'Thank you!'
+      },
+      payments: ['KPay', 'Wave Pay', 'Cash'],
+      security: {
+        ownerGmail: 'yooncopy.18@gmail.com',
+        fbUrl: 'https://yooncopypos.yoon-copy.workers.dev',
+        roomId: 'yooncopy-pos-2026'
+      },
+      books: [],
+      customers: [],
+      sales: [],
+      deletedIds: [],
+      dailySeq: {}
+    };
+
+    function loadLocal() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state = {
+            ...state,
+            ...parsed,
+            shop: { ...state.shop, ...(parsed.shop || {}) },
+            receipt: { ...state.receipt, ...(parsed.receipt || {}) },
+            security: {
+              ownerGmail: (parsed.security && parsed.security.ownerGmail) || 'yooncopy.18@gmail.com',
+              fbUrl: 'https://yooncopypos.yoon-copy.workers.dev',
+              roomId: 'yooncopy-pos-2026'
+            },
+            books: Array.isArray(parsed.books) ? parsed.books : [],
+            customers: Array.isArray(parsed.customers) ? parsed.customers : [],
+            sales: Array.isArray(parsed.sales) ? parsed.sales : [],
+            deletedIds: Array.isArray(parsed.deletedIds) ? parsed.deletedIds : [],
+            dailySeq: parsed.dailySeq || {}
+          };
+        } catch (e) {}
+      }
+      setLang(state.lang || 'en', false);
+    }
+
+    function updateSyncBadge(prefix) {
+      const badge = document.getElementById('syncStatus');
+      if (!badge) return;
+      badge.innerHTML = `${prefix}<br><span style="opacity:0.85;font-size:11px;">Books: ${state.books.length} | Sales: ${state.sales.length}</span>`;
+    }
+
+    // Merge items by ID so PC and Mobile never overwrite each other's new records
+    function mergeRecordArrays(localArr, remoteArr, deletedSet) {
+      const map = new Map();
+      (localArr || []).forEach(item => {
+        if (item && item.id && !deletedSet.has(item.id)) {
+          map.set(item.id, item);
+        }
+      });
+      (remoteArr || []).forEach(item => {
+        if (item && item.id && !deletedSet.has(item.id)) {
+          const existing = map.get(item.id);
+          if (!existing) {
+            map.set(item.id, item);
+          } else {
+            const localMod = Number(existing.modAt || 0);
+            const remoteMod = Number(item.modAt || 0);
+            if (remoteMod >= localMod) {
+              map.set(item.id, item);
+            }
+          }
+        }
+      });
+      return Array.from(map.values());
+    }
+
+    function mergeWithRemote(remote) {
+      if (!remote || typeof remote !== 'object') return false;
+
+      const beforeSig = JSON.stringify({
+        books: state.books,
+        customers: state.customers,
+        sales: state.sales,
+        deletedIds: state.deletedIds,
+        shop: state.shop,
+        payments: state.payments
+      });
+
+      const deletedSet = new Set([
+        ...(state.deletedIds || []),
+        ...(Array.isArray(remote.deletedIds) ? remote.deletedIds : [])
+      ]);
+
+      const mergedBooks = mergeRecordArrays(state.books, remote.books, deletedSet);
+      const mergedCustomers = mergeRecordArrays(state.customers, remote.customers, deletedSet);
+      const mergedSales = mergeRecordArrays(state.sales, remote.sales, deletedSet)
+        .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+      const mergedDailySeq = { ...(remote.dailySeq || {}), ...(state.dailySeq || {}) };
+      Object.keys(mergedDailySeq).forEach(k => {
+        mergedDailySeq[k] = Math.max(
+          Number((remote.dailySeq || {})[k] || 0),
+          Number((state.dailySeq || {})[k] || 0)
+        );
+      });
+
+      const remoteUpdatedAt = Number(remote.updatedAt || 0);
+      const localUpdatedAt = Number(state.updatedAt || 0);
+
+      state = {
+        ...state,
+        shop: remoteUpdatedAt > localUpdatedAt && remote.shop ? { ...state.shop, ...remote.shop } : state.shop,
+        receipt: remoteUpdatedAt > localUpdatedAt && remote.receipt ? { ...state.receipt, ...remote.receipt } : state.receipt,
+        payments: Array.from(new Set([...(state.payments || []), ...(remote.payments || [])])),
+        books: mergedBooks,
+        customers: mergedCustomers,
+        sales: mergedSales,
+        deletedIds: Array.from(deletedSet).slice(-500),
+        dailySeq: mergedDailySeq,
+        updatedAt: Math.max(localUpdatedAt, remoteUpdatedAt)
+      };
+
+      const afterSig = JSON.stringify({
+        books: state.books,
+        customers: state.customers,
+        sales: state.sales,
+        deletedIds: state.deletedIds,
+        shop: state.shop,
+        payments: state.payments
+      });
+
+      return beforeSig !== afterSig;
+    }
+
+    async function persistLocal(pushCloud = true) {
+      state.updatedAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+      if (pushCloud) {
+        await pushPosStateToWorker();
+      }
+    }
+
+    async function pushPosStateToWorker() {
+      if (isSyncBusy) return;
+      isSyncBusy = true;
+      updateSyncBadge('Sync: Saving...');
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 7000);
+
+      try {
+        // Pull first so we merge any new items from the other device before pushing
+        const getRes = await fetch(SHARED_ROOM_URL + '?t=' + Date.now(), {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        if (getRes.ok) {
+          const remote = await getRes.json();
+          if (remote && remote !== 'null') {
+            const changed = mergeWithRemote(remote);
+            if (changed) {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+              renderAll();
+            }
+          }
+        }
+
+        const postRes = await fetch(SHARED_ROOM_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state),
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+
+        if (postRes.ok) {
+          updateSyncBadge('Sync: Live (' + new Date().toLocaleTimeString() + ')');
+        } else {
+          updateSyncBadge('Sync: Error ' + postRes.status);
+        }
+      } catch (e) {
+        clearTimeout(timer);
+        updateSyncBadge(e.name === 'AbortError' ? 'Sync: Timeout (Tap)' : 'Sync: Offline (Tap)');
+      } finally {
+        isSyncBusy = false;
+      }
+    }
+
+    async function pullPosStateFromWorker(pushIfLocalHasExtra = false) {
+      if (isSyncBusy) return;
+      isSyncBusy = true;
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 7000);
+
+      try {
+        const res = await fetch(SHARED_ROOM_URL + '?t=' + Date.now(), {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+
+        if (!res.ok) {
+          updateSyncBadge('Sync: Error ' + res.status);
+          return;
+        }
+
+        const remote = await res.json();
+        const localTotalItems = state.books.length + state.customers.length + state.sales.length;
+
+        if (!remote || remote === 'null') {
+          if (localTotalItems > 0) {
+            isSyncBusy = false;
+            await pushPosStateToWorker();
+            return;
+          }
+          updateSyncBadge('Sync: Connected');
+          return;
+        }
+
+        const remoteTotalItems =
+          (Array.isArray(remote.books) ? remote.books.length : 0) +
+          (Array.isArray(remote.customers) ? remote.customers.length : 0) +
+          (Array.isArray(remote.sales) ? remote.sales.length : 0);
+
+        const changed = mergeWithRemote(remote);
+        if (changed) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          renderAll();
+        }
+
+        const mergedTotalItems = state.books.length + state.customers.length + state.sales.length;
+        if (pushIfLocalHasExtra || mergedTotalItems > remoteTotalItems) {
+          isSyncBusy = false;
+          await pushPosStateToWorker();
+          return;
+        }
+
+        updateSyncBadge('Sync: Live (' + new Date().toLocaleTimeString() + ')');
+      } catch (e) {
+        clearTimeout(timer);
+      } finally {
+        isSyncBusy = false;
+      }
+    }
+
+    async function syncNowManual() {
+      updateSyncBadge('Sync: Syncing...');
+      await pullPosStateFromWorker(true);
+    }
+
+    function startCloudSync() {
+      if (workerPollTimer) clearInterval(workerPollTimer);
+      pullPosStateFromWorker(true);
+      workerPollTimer = setInterval(() => {
+        if (!document.hidden) {
+          pullPosStateFromWorker(false);
+        }
+      }, POLL_INTERVAL_MS);
+    }
+
+    function setLang(lang, save = true) {
+      state.lang = lang;
+      document.body.classList.toggle('mm-font', lang === 'mm');
+      if (save) persistLocal(false);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('main > section').forEach(s => s.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      renderAll();
+    }
+
+    function getAllSchools() {
+      const set = new Set();
+      state.books.forEach(b => b.school && set.add(b.school.trim()));
+      state.customers.forEach(c => c.school && set.add(c.school.trim()));
+      state.sales.forEach(s => s.school && set.add(s.school.trim()));
+      return Array.from(set);
+    }
+
+    function renderSchoolDatalist() {
+      const dl = document.getElementById('schoolList');
+      dl.innerHTML = getAllSchools().map(s => `<option value="${esc(s)}"></option>`).join('');
+    }
+
+    function openBookModal() {
+      document.getElementById('mBookSchool').value = '';
+      document.getElementById('mBookNo').value = '';
+      document.getElementById('mBookName').value = '';
+      document.getElementById('mBookPrice').value = '';
+      document.getElementById('bookModal').classList.add('open');
+    }
+    function closeBookModal() { document.getElementById('bookModal').classList.remove('open'); }
+    function saveBook() {
+      const school = document.getElementById('mBookSchool').value.trim();
+      const bookNo = document.getElementById('mBookNo').value.trim();
+      const name = document.getElementById('mBookName').value.trim();
+      const price = Number(document.getElementById('mBookPrice').value || 0);
+      if (!name) return alert('Enter Book Name');
+      state.books.push({ id: 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,5), modAt: Date.now(), school, bookNo, name, price });
+      closeBookModal();
+      persistLocal(true);
+    }
+    function updateBookPriceInline(id, val) {
+      const b = state.books.find(x => x.id === id);
+      if (b) { b.price = Number(val || 0); b.modAt = Date.now(); persistLocal(true); }
+    }
+    function deleteBook(id) {
+      state.deletedIds.push(id);
+      state.books = state.books.filter(x => x.id !== id);
+      persistLocal(true);
+    }
+    function renderProducts() {
+      const fSchool = (document.getElementById('prodFilterSchool').value || '').toLowerCase().trim();
+      const fText = (document.getElementById('prodFilterText').value || '').toLowerCase().trim();
+      const rows = state.books.filter(b => {
+        const okSchool = !fSchool || (b.school || '').toLowerCase().includes(fSchool);
+        const okText = !fText || (b.bookNo || '').toLowerCase().includes(fText) || (b.name || '').toLowerCase().includes(fText);
+        return okSchool && okText;
+      });
+      document.getElementById('productsBody').innerHTML = rows.map(b => `
+        <tr>
+          <td>${esc(b.school || '-')}</td>
+          <td>${esc(b.bookNo || '-')}</td>
+          <td>${esc(b.name)}</td>
+          <td><input type="number" value="${b.price}" style="width:110px;" onchange="updateBookPriceInline('${b.id}', this.value)" /></td>
+          <td><button onclick="deleteBook('${b.id}')">Delete</button></td>
+        </tr>
+      `).join('');
+    }
+    function exportSchoolCSV() {
+      const lines = ['School,BookNo,BookName,Price'];
+      state.books.forEach(b => lines.push(`"${b.school}","${b.bookNo}","${b.name}",${b.price}`));
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'school_books.csv';
+      a.click();
+    }
+
+    function openCustomerModal() {
+      document.getElementById('mCustSchool').value = '';
+      document.getElementById('mCustName').value = '';
+      document.getElementById('mCustPhone').value = '';
+      document.getElementById('mCustNote').value = '';
+      document.getElementById('customerModal').classList.add('open');
+    }
+    function closeCustomerModal() { document.getElementById('customerModal').classList.remove('open'); }
+    function saveCustomer() {
+      const school = document.getElementById('mCustSchool').value.trim();
+      const name = document.getElementById('mCustName').value.trim();
+      const phone = document.getElementById('mCustPhone').value.trim();
+      const note = document.getElementById('mCustNote').value.trim();
+      if (!name) return alert('Enter Customer Name');
+      state.customers.push({ id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,5), modAt: Date.now(), school, name, phone, note });
+      closeCustomerModal();
+      persistLocal(true);
+    }
+    function deleteCustomer(id) {
+      state.deletedIds.push(id);
+      state.customers = state.customers.filter(c => c.id !== id);
+      persistLocal(true);
+    }
+    function renderCustomers() {
+      const fSchool = (document.getElementById('custFilterSchool').value || '').toLowerCase().trim();
+      const fName = (document.getElementById('custFilterName').value || '').toLowerCase().trim();
+      const rows = state.customers.filter(c => {
+        const okSchool = !fSchool || (c.school || '').toLowerCase().includes(fSchool);
+        const okName = !fName || (c.name || '').toLowerCase().includes(fName);
+        return okSchool && okName;
+      });
+      document.getElementById('customersBody').innerHTML = rows.map(c => `
+        <tr>
+          <td>${esc(c.school || '-')}</td>
+          <td>${esc(c.name)}</td>
+          <td>${esc(c.phone || '-')}</td>
+          <td>${esc(c.note || '-')}</td>
+          <td><button onclick="deleteCustomer('${c.id}')">Delete</button></td>
+        </tr>
+      `).join('');
+
+      const sel = document.getElementById('cartCustomer');
+      const prev = sel.value;
+      sel.innerHTML = `<option value="">Walk-in Customer</option>` + state.customers.map(c =>
+        `<option value="${esc(c.name)}" data-school="${esc(c.school || '')}">${esc(c.name)} (${esc(c.school || '-')})</option>`
+      ).join('');
+      if (prev) sel.value = prev;
+    }
+
+    function quickAddBook() {
+      const school = (document.getElementById('quickSchool').value || '').toLowerCase().trim();
+      const bookNo = (document.getElementById('quickBookNo').value || '').toLowerCase().trim();
+      if (!bookNo) return;
+      const found = state.books.find(b =>
+        (b.bookNo || '').toLowerCase() === bookNo &&
+        (!school || (b.school || '').toLowerCase().includes(school))
+      );
+      if (!found) return alert('Book not found');
+      addItemToCart(found.name, found.price, 1, found.school || '');
+      document.getElementById('quickBookNo').value = '';
+    }
+
+    function calcCustomAmt() {
+      const p = Number(document.getElementById('customPrice').value || 0);
+      const q = Number(document.getElementById('customQty').value || 1);
+      document.getElementById('customAmt').value = p * q;
+    }
+    function addCustomToCart() {
+      const name = document.getElementById('customName').value.trim();
+      const price = Number(document.getElementById('customPrice').value || 0);
+      const qty = Math.max(1, Number(document.getElementById('customQty').value || 1));
+      if (!name) return alert('Enter Item Name');
+      const school = document.getElementById('quickSchool').value.trim();
+      addItemToCart(name, price, qty, school);
+      document.getElementById('customName').value = '';
+      document.getElementById('customPrice').value = '';
+      document.getElementById('customQty').value = '1';
+      document.getElementById('customAmt').value = '';
+    }
+
+    function addItemToCart(name, price, qty, school) {
+      const existing = cart.find(i => i.name === name && i.price === price && i.school === school);
+      if (existing) existing.qty += qty;
+      else cart.push({ id: 'i_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), name, price, qty, school });
+      renderCart();
+    }
+
+    function setCartQty(id, val) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+      const q = parseInt(val, 10);
+      if (!q || q <= 0) cart = cart.filter(i => i.id !== id);
+      else item.qty = q;
+      renderCart();
+    }
+
+    function stepCartQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+      renderCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      document.getElementById('cartDiscount').value = '0';
+      document.getElementById('cartPaid').value = '0';
+      renderCart();
+    }
+
+    function renderCartTotals() {
+      const sub = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const disc = Number(document.getElementById('cartDiscount').value || 0);
+      const total = Math.max(0, sub - disc);
+      document.getElementById('cartTotal').textContent = total.toLocaleString() + ' Ks';
+      return total;
+    }
+
+    function renderCart() {
+      document.getElementById('cartBody').innerHTML = cart.map(i => `
+        <tr>
+          <td>${esc(i.name)}<br><small style="color:var(--muted);">${esc(i.school || '')}</small></td>
+          <td>${i.price.toLocaleString()}</td>
+          <td style="white-space:nowrap;">
+            <button onclick="stepCartQty('${i.id}', -1)">-</button>
+            <input type="number" min="1" value="${i.qty}" style="width:54px;display:inline-block;" onchange="setCartQty('${i.id}', this.value)" />
+            <button onclick="stepCartQty('${i.id}', 1)">+</button>
+          </td>
+          <td>${(i.price * i.qty).toLocaleString()}</td>
+          <td><button onclick="setCartQty('${i.id}', 0)">x</button></td>
+        </tr>
+      `).join('');
+      renderCartTotals();
+    }
+
+    function renderSellCatalog() {
+      const fSchool = (document.getElementById('sellSearchSchool').value || '').toLowerCase().trim();
+      const fBook = (document.getElementById('sellSearchBook').value || '').toLowerCase().trim();
+      const list = state.books.filter(b => {
+        const okS = !fSchool || (b.school || '').toLowerCase().includes(fSchool);
+        const okB = !fBook || (b.bookNo || '').toLowerCase().includes(fBook) || (b.name || '').toLowerCase().includes(fBook);
+        return okS && okB;
+      });
+      document.getElementById('sellCatalog').innerHTML = list.map(b => `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;" onclick="addItemToCart('${escJs(b.name)}', ${b.price}, 1, '${escJs(b.school || '')}')">
+          <div style="font-size:11px;color:var(--muted);">${esc(b.school || '-')} • #${esc(b.bookNo || '-')}</div>
+          <div style="font-weight:600;margin:2px 0;">${esc(b.name)}</div>
+          <div style="color:var(--primary);font-weight:700;">${Number(b.price).toLocaleString()} Ks</div>
+        </div>
+      `).join('');
+    }
+
+    function generateYCReceiptNo() {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = String(now.getFullYear());
+      const dateKey = dd + mm + yyyy;
+      const nextNum = (state.dailySeq[dateKey] || 0) + 1;
+      state.dailySeq[dateKey] = nextNum;
+      return `YC${dateKey}${String(nextNum).padStart(4, '0')}`;
+    }
+
+    function checkoutSale() {
+      if (!cart.length) return alert('Cart is empty');
+      const receiptNo = generateYCReceiptNo();
+      const custSel = document.getElementById('cartCustomer');
+      const customerName = custSel.value || 'Walk-in Customer';
+      const optSchool = custSel.selectedOptions[0]?.dataset?.school || '';
+      const school = optSchool || document.getElementById('quickSchool').value.trim() || (cart[0]?.school || '-');
+      const total = renderCartTotals();
+      const saleObj = {
+        id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2,5),
+        modAt: Date.now(),
+        receiptNo,
+        date: new Date().toISOString(),
+        school,
+        customer: customerName,
+        payment: document.getElementById('cartPayment').value || 'Cash',
+        items: cart.map(x => ({ ...x })),
+        total
+      };
+      state.sales.unshift(saleObj);
+      clearCart();
+      persistLocal(true);
+      drawReceiptCanvas(saleObj);
+      alert('Saved Receipt: ' + receiptNo);
+    }
+
+    function drawReceiptCanvas(sale) {
+      const canvas = document.getElementById('receiptCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#111111';
+      ctx.textAlign = 'center';
+
+      let y = 24;
+      if (state.shop.logo) {
+        const img = new Image();
+        img.src = state.shop.logo;
+        try { ctx.drawImage(img, canvas.width / 2 - 32, y, 64, 64); y += 74; } catch (e) {}
+      }
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(state.shop.name || 'Yoon Copy', canvas.width / 2, y); y += 22;
+      ctx.font = '12px sans-serif';
+      if (state.shop.address) { ctx.fillText(state.shop.address, canvas.width / 2, y); y += 18; }
+      if (state.shop.phone) { ctx.fillText('Tel: ' + state.shop.phone, canvas.width / 2, y); y += 18; }
+      ctx.fillText('Receipt: ' + sale.receiptNo, canvas.width / 2, y); y += 18;
+      ctx.fillText('Customer: ' + sale.customer + ' | School: ' + (sale.school || '-'), canvas.width / 2, y); y += 24;
+
+      ctx.textAlign = 'left';
+      (sale.items || []).forEach(it => {
+        ctx.fillText(`${it.name} x${it.qty}`, 20, y);
+        ctx.textAlign = 'right';
+        ctx.fillText((it.price * it.qty).toLocaleString() + ' Ks', canvas.width - 20, y);
+        ctx.textAlign = 'left';
+        y += 20;
+      });
+
+      y += 10;
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('TOTAL', 20, y);
+      ctx.textAlign = 'right';
+      ctx.fillText(Number(sale.total || 0).toLocaleString() + ' Ks', canvas.width - 20, y);
+      y += 30;
+      ctx.textAlign = 'center';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(state.receipt.footer || 'Thank you!', canvas.width / 2, y);
+      return canvas;
+    }
+
+    function printReceiptPreview() {
+      const sample = state.sales[0] || {
+        receiptNo: 'YC201120260001',
+        customer: 'Sample Customer',
+        school: 'Sample School',
+        items: cart.length ? cart : [{ name: 'Sample Book', price: 1000, qty: 1 }],
+        total: renderCartTotals() || 1000
+      };
+      const c = drawReceiptCanvas(sample);
+      const w = window.open('');
+      w.document.write(`<img src="${c.toDataURL('image/png')}" style="max-width:100%;" onload="window.print();window.close();" />`);
+    }
+
+    function saveReceiptJPEG(saleId = null) {
+      const sale = (saleId ? state.sales.find(s => s.id === saleId) : state.sales[0]) || {
+        receiptNo: 'YC201120260001',
+        customer: 'Sample Customer',
+        school: 'Sample School',
+        items: cart.length ? cart : [{ name: 'Sample Book', price: 1000, qty: 1 }],
+        total: renderCartTotals() || 1000
+      };
+      const c = drawReceiptCanvas(sale);
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/jpeg', 0.92);
+      a.download = `${sale.receiptNo}.jpg`;
+      a.click();
+    }
+
+    function setReportPeriod(p) {
+      reportPeriod = p;
+      renderReports();
+    }
+    function inPeriod(isoDate) {
+      if (reportPeriod === 'all') return true;
+      const d = new Date(isoDate);
+      const now = new Date();
+      if (reportPeriod === 'today') return d.toDateString() === now.toDateString();
+      if (reportPeriod === 'week') return (now - d) <= 7 * 86400000;
+      if (reportPeriod === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      if (reportPeriod === 'year') return d.getFullYear() === now.getFullYear();
+      return true;
+    }
+    function renderReports() {
+      const fSchool = (document.getElementById('repSearchSchool').value || '').toLowerCase().trim();
+      const fCust = (document.getElementById('repSearchCustomer').value || '').toLowerCase().trim();
+      const list = state.sales.filter(s => {
+        const okP = inPeriod(s.date);
+        const okS = !fSchool || (s.school || '').toLowerCase().includes(fSchool);
+        const okC = !fCust || (s.customer || '').toLowerCase().includes(fCust);
+        return okP && okS && okC;
+      });
+      document.getElementById('reportsBody').innerHTML = list.map(s => `
+        <tr>
+          <td>${esc(s.receiptNo)}</td>
+          <td>${new Date(s.date).toLocaleDateString()}</td>
+          <td>${esc(s.school || '-')}</td>
+          <td>${esc(s.customer || '-')}</td>
+          <td>${Number(s.total || 0).toLocaleString()} Ks</td>
+          <td style="white-space:nowrap;">
+            <button onclick="openEditSale('${s.id}')">Edit</button>
+            <button onclick="saveReceiptJPEG('${s.id}')">JPEG</button>
+            <button onclick="printSaleById('${s.id}')">Print</button>
+            <button class="btn-danger" onclick="deleteSale('${s.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    function deleteSale(id) {
+      const s = state.sales.find(x => x.id === id);
+      if (!s) return;
+      const label = s.receiptNo ? ` (${s.receiptNo})` : '';
+      if (!confirm(`Delete receipt${label}?`)) return;
+      if (!state.deletedIds.includes(id)) {
+        state.deletedIds.push(id);
+      }
+      state.sales = state.sales.filter(x => x.id !== id);
+      persistLocal(true);
+    }
+    function openEditSale(id) {
+      const s = state.sales.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('editSaleId').value = s.id;
+      document.getElementById('editSaleCustomer').value = s.customer || '';
+      document.getElementById('editSaleSchool').value = s.school || '';
+      document.getElementById('editSaleTotal').value = s.total || 0;
+      document.getElementById('editSaleModal').classList.add('open');
+    }
+    function closeEditSaleModal() { document.getElementById('editSaleModal').classList.remove('open'); }
+    function saveEditedSale() {
+      const id = document.getElementById('editSaleId').value;
+      const s = state.sales.find(x => x.id === id);
+      if (!s) return;
+      s.customer = document.getElementById('editSaleCustomer').value.trim();
+      s.school = document.getElementById('editSaleSchool').value.trim();
+      s.total = Number(document.getElementById('editSaleTotal').value || 0);
+      s.modAt = Date.now();
+      closeEditSaleModal();
+      persistLocal(true);
+    }
+    function printSaleById(id) {
+      const s = state.sales.find(x => x.id === id);
+      if (!s) return;
+      const c = drawReceiptCanvas(s);
+      const w = window.open('');
+      w.document.write(`<img src="${c.toDataURL('image/png')}" style="max-width:100%;" onload="window.print();window.close();" />`);
+    }
+
+    function handleLogoUpload(ev) {
+      const file = ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          rawLogoImage = img;
+          renderLogoCropPreview();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    function renderLogoCropPreview() {
+      const canvas = document.getElementById('logoCropCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scale = Number(document.getElementById('setLogoScale').value || 1);
+      const src = rawLogoImage || (() => {
+        if (!state.shop.logo) return null;
+        const i = new Image();
+        i.src = state.shop.logo;
+        return i.complete ? i : null;
+      })();
+      if (src) {
+        const w = canvas.width * scale;
+        const h = canvas.height * scale;
+        ctx.drawImage(src, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+        state.shop.logo = canvas.toDataURL('image/png');
+      }
+    }
+    function saveShopSettings() {
+      renderLogoCropPreview();
+      state.shop.name = document.getElementById('setShopName').value.trim() || 'Yoon Copy';
+      state.shop.gmail = document.getElementById('setShopGmail').value.trim();
+      state.shop.phone = document.getElementById('setShopPhone').value.trim();
+      state.shop.address = document.getElementById('setShopAddress').value.trim();
+      persistLocal(true);
+      alert('Saved Shop Settings');
+    }
+
+    function addCustomPrinter() {
+      const p = document.getElementById('newPrinterName').value.trim();
+      if (!p) return;
+      if (!state.receipt.printers.includes(p)) state.receipt.printers.push(p);
+      state.receipt.printer = p;
+      document.getElementById('newPrinterName').value = '';
+      persistLocal(true);
+    }
+    function saveReceiptSettings() {
+      state.receipt.printer = document.getElementById('setPrinterSelect').value;
+      state.receipt.paper = document.getElementById('setPaperSize').value;
+      state.receipt.footer = document.getElementById('setFooterText').value;
+      persistLocal(true);
+      alert('Saved Receipt Settings');
+    }
+
+    function addPaymentMethod() {
+      const m = document.getElementById('newPaymentMethod').value.trim();
+      if (!m) return;
+      if (!state.payments.includes(m)) state.payments.push(m);
+      document.getElementById('newPaymentMethod').value = '';
+      persistLocal(true);
+    }
+    function removePaymentMethod(m) {
+      state.payments = state.payments.filter(x => x !== m);
+      persistLocal(true);
+    }
+
+    function saveCloudAndSecurity() {
+      state.security.ownerGmail = document.getElementById('setOwnerGmail').value.trim() || 'yooncopy.18@gmail.com';
+      state.security.fbUrl = 'https://yooncopypos.yoon-copy.workers.dev';
+      state.security.roomId = 'yooncopy-pos-2026';
+      persistLocal(true);
+      alert('Cloud Sync Updated');
+    }
+
+    function renderSettingsInputs() {
+      document.getElementById('setShopName').value = state.shop.name || '';
+      document.getElementById('setShopGmail').value = state.shop.gmail || '';
+      document.getElementById('setShopPhone').value = state.shop.phone || '';
+      document.getElementById('setShopAddress').value = state.shop.address || '';
+
+      const pSel = document.getElementById('setPrinterSelect');
+      pSel.innerHTML = (state.receipt.printers || []).map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+      pSel.value = state.receipt.printer || '';
+      document.getElementById('setPaperSize').value = state.receipt.paper || '80mm';
+      document.getElementById('setFooterText').value = state.receipt.footer || '';
+
+      document.getElementById('paymentList').innerHTML = state.payments.map(m =>
+        `<span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);padding:4px 10px;border-radius:6px;margin-right:6px;">
+          ${esc(m)} <button onclick="removePaymentMethod('${escJs(m)}')" style="padding:2px 6px;">x</button>
+        </span>`
+      ).join('');
+
+      const paySel = document.getElementById('cartPayment');
+      paySel.innerHTML = state.payments.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+
+      document.getElementById('setOwnerGmail').value = state.security.ownerGmail || 'yooncopy.18@gmail.com';
+      document.getElementById('setFbUrl').value = 'https://yooncopypos.yoon-copy.workers.dev';
+      document.getElementById('setSyncRoom').value = 'yooncopy-pos-2026';
+    }
+
+    function renderSidebar() {
+      document.getElementById('sidebarShopName').textContent = state.shop.name || 'Yoon Copy';
+      document.getElementById('sidebarEmail').textContent = state.security.ownerGmail || state.shop.gmail || '';
+      const logoEl = document.getElementById('sidebarLogo');
+      if (state.shop.logo) {
+        logoEl.src = state.shop.logo;
+        logoEl.style.display = 'block';
+      } else {
+        logoEl.style.display = 'none';
+      }
+    }
+
+    function renderAll() {
+      renderSidebar();
+      renderSchoolDatalist();
+      renderSellCatalog();
+      renderCart();
+      renderProducts();
+      renderCustomers();
+      renderReports();
+      renderSettingsInputs();
+    }
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escJs(s) {
+      return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    }
+
+    loadLocal();
+    renderAll();
+    startCloudSync();
+  </script>
+</body>
+</html>
